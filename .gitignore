@@ -4,3 +4,4 @@ venv/
 *.iml
 lambda/*/*/*
 **/node_modules/*
+**/dist/*
