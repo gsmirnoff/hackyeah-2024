@@ -1,17 +1,19 @@
+#!/bin/bash
+set -x
 mkdir -p build
-lambda_bucket=$(aws s3 ls | grep lambdas | cut -d " " -f 3)
-timestamp=$(date +%s)
+mkdir -p build/transcribe
+mkdir -p build/comprehend
 
 # prepare transcribe lambda package
-cd lambda/transcribe && zip -r ../../build/transcribe.zip . && cd ../../
-
-sed -i "s/TranscribeFnFilename: ".*"$/TranscribeFnFilename: \"transcribe-${timestamp}.zip\"/g" cloudformation.template
-
-aws s3 cp build/transcribe.zip s3://${lambda_bucket}/transcribe-${timestamp}.zip
+cp lambda/transcribe/transcribe.py build/transcribe/transcribe.py
+python3 -m pip install boto3 -t build/transcribe
+python3 -m pip install uuid -t build/transcribe
+python3 -m pip install os -t build/transcribe
+cd build/transcribe && zip -r ../transcribe.zip . && cd ../../ && rm -rf build/transcribe
 
 # prepare comprehend lambda package
-cd lambda/comprehend && zip -r ../../build/comprehend.zip . && cd ../../
-
-sed -i "s/ComprehendFnFilename: ".*"$/ComprehendFnFilename: \"comprehend-${timestamp}.zip\"/g" cloudformation.template
-
-aws s3 cp build/comprehend.zip s3://${lambda_bucket}/comprehend-${timestamp}.zip
+cp lambda/comprehend/comprehend.py build/comprehend/comprehend.py
+python3 -m pip install boto3 -t build/comprehend
+python3 -m pip install json -t build/transcribe
+python3 -m pip install os -t build/transcribe
+cd build/comprehend && zip -r ../comprehend.zip . && cd ../../ && rm -rf build/comprehend
