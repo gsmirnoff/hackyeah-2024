@@ -3,33 +3,21 @@ AWSTemplateFormatVersion: 2010-09-09
 Mappings:
   SourceCode:
     General:
-      TranscribeFnFilename: "transcribe-1727511708.zip"
-      ComprehendFnFilename: ""
+      TranscribeFnFilename: "transcribe.zip"
+      ComprehendFnFilename: "comprehend.zip"
 
 Resources:
   Source:
     Type: 'AWS::S3::Bucket'
-    Properties:
-      NotificationConfiguration:
-        LambdaConfigurations:
-          - Function: !GetAtt 'TranscribeFn.Arn'
-            Event: 's3:ObjectCreated:*'
   Transcribed:
     Type: 'AWS::S3::Bucket'
-    Properties:
-      NotificationConfiguration:
-        LambdaConfigurations:
-          - Function: !GetAtt 'ComprehendFn.Arn'
-            Event: 's3:ObjectCreated:*'
   Comprehended:
-    Type: 'AWS::S3::Bucket'
-  Lambdas:
     Type: 'AWS::S3::Bucket'
   TranscribeFn:
     Type: 'AWS::Lambda::Function'
     Properties:
       Code:
-        S3Bucket: !Ref 'Lambdas'
+        S3Bucket: 'lambdas-hackyeah'
         S3Key: !FindInMap ["SourceCode", "General", "TranscribeFnFilename"]
       FunctionName: transcribe-fn
       Handler: transcribe.lambda_handler
@@ -41,14 +29,14 @@ Resources:
         Variables:
           OUTPUT_BUCKET_NAME:
             Ref: Transcribed
-        Tags:
-          - Key: project
-            Value: !Ref 'AWS::StackName'
+      Tags:
+        - Key: project
+          Value: !Ref 'AWS::StackName'
   ComprehendFn:
     Type: 'AWS::Lambda::Function'
     Properties:
       Code:
-        S3Bucket: !Ref 'Lambdas'
+        S3Bucket: 'lambdas-hackyeah'
         S3Key: !FindInMap ["SourceCode", "General", "ComprehendFnFilename"]
       FunctionName: comprehend-fn
       Handler: comprehend.lambda_handler
@@ -60,9 +48,9 @@ Resources:
         Variables:
           OUTPUT_BUCKET_NAME:
             Ref: Comprehended
-        Tags:
-          - Key: project
-            Value: !Ref 'AWS::StackName'
+      Tags:
+        - Key: project
+          Value: !Ref 'AWS::StackName'
   TranscribeIAMRole:
     Type: 'AWS::IAM::Role'
     Properties:
