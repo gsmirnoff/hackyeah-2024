@@ -22,12 +22,20 @@ def lambda_handler(event, context):
     try:
         response = transcribe_client.start_transcription_job(
             TranscriptionJobName=job_name,
-            LanguageCode='en-US',  # Specify the language of the audio
+            LanguageCode='pl-PL',  # Specify the language of the audio
             MediaFormat='mp4',  # Specify the media format (change if different)
             Media={
                 'MediaFileUri': s3_url
             },
-            OutputBucketName=os.environ['OUTPUT_BUCKET_NAME']
+            OutputBucketName=os.environ['OUTPUT_BUCKET_NAME'],
+            OutputKey=f"{key}.json",
+            ToxicityDetection=[
+                {
+                    'ToxicityCategories': [
+                        'ALL',
+                    ]
+                }
+            ]
         )
 
         print(f"Transcription job started: {job_name}")
