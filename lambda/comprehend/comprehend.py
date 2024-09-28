@@ -1,3 +1,4 @@
+import os
 import boto3
 import json
 
@@ -23,11 +24,11 @@ def lambda_handler(event, context):
 
     # Use AWS Comprehend to detect entities in the transcribed text
     try:
-        print(f"Comprehend job started: {job_name}")
+        print(f"Comprehend job started: {key}")
 
         comprehend_response = comprehend_client.detect_entities(Text=transcribed_text, LanguageCode='en')
 
-        print(f"Comprehend job finished: {job_name}")
+        print(f"Comprehend job finished: {key}")
     except Exception as e:
         print(f"Error starting comprehend job: {str(e)}")
         return {

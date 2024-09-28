@@ -3,8 +3,8 @@ AWSTemplateFormatVersion: 2010-09-09
 Mappings:
   SourceCode:
     General:
-      TranscribeFnFilename: "transcribe-1727511708.zip"
-      ComprehendFnFilename: ""
+      TranscribeFnFilename: "transcribe-1727534754.zip"
+      ComprehendFnFilename: "comprehend-1727534754.zip"
 
 Resources:
   Source:
@@ -16,11 +16,11 @@ Resources:
             Event: 's3:ObjectCreated:*'
   Transcribed:
     Type: 'AWS::S3::Bucket'
-    Properties:
-      NotificationConfiguration:
-        LambdaConfigurations:
-          - Function: !GetAtt 'ComprehendFn.Arn'
-            Event: 's3:ObjectCreated:*'
+#    Properties:
+#      NotificationConfiguration:
+#        LambdaConfigurations:
+#          - Function: !GetAtt 'ComprehendFn.Arn'
+#            Event: 's3:ObjectCreated:*'
   Comprehended:
     Type: 'AWS::S3::Bucket'
   Lambdas:
@@ -41,9 +41,9 @@ Resources:
         Variables:
           OUTPUT_BUCKET_NAME:
             Ref: Transcribed
-        Tags:
-          - Key: project
-            Value: !Ref 'AWS::StackName'
+      Tags:
+        - Key: project
+          Value: !Ref 'AWS::StackName'
   ComprehendFn:
     Type: 'AWS::Lambda::Function'
     Properties:
@@ -60,9 +60,9 @@ Resources:
         Variables:
           OUTPUT_BUCKET_NAME:
             Ref: Comprehended
-        Tags:
-          - Key: project
-            Value: !Ref 'AWS::StackName'
+      Tags:
+        - Key: project
+          Value: !Ref 'AWS::StackName'
   TranscribeIAMRole:
     Type: 'AWS::IAM::Role'
     Properties:
