@@ -54,7 +54,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({s3Client, sourceBucket}) => 
             // Upload the file to S3
             const result = await s3Client.send(new PutObjectCommand({Bucket: sourceBucket, Key: file.name, Body: file}));
             console.log('File uploaded successfully', result);
-            alert('File uploaded successfully!');
+            location.reload();
         } catch (error) {
             console.error('Error uploading file:', error);
             alert('Error uploading file');
@@ -76,7 +76,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({s3Client, sourceBucket}) => 
                 onClick={handleButtonClick}
                 disabled={uploading}
             >
-                {uploading ? 'Uploading...' : 'Upload Video'}
+                {uploading ? 'Przeslanie...' : 'Prześlij plik mp4'}
             </button>
         </div>
     );

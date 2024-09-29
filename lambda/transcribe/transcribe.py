@@ -28,14 +28,7 @@ def lambda_handler(event, context):
                 'MediaFileUri': s3_url
             },
             OutputBucketName=os.environ['OUTPUT_BUCKET_NAME'],
-            OutputKey=f"{key}.json",
-            ToxicityDetection=[
-                {
-                    'ToxicityCategories': [
-                        'ALL',
-                    ]
-                }
-            ]
+            OutputKey=f"{key}.json"
         )
 
         print(f"Transcription job started: {job_name}")
