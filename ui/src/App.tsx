@@ -53,8 +53,10 @@ function App() {
     }, []);
 
     const updateSummary = (filename: string) => {
-        // const json = fetch(`https://${comprehendedBucket}.s3.eu-central-1.amazonaws.com/` + filename+'.json')
-        const details = `
+        //HY_2024_film_01.mp4.json-comprehended.json
+        fetch(`https://${comprehendedBucket}.s3.eu-central-1.amazonaws.com/` + filename + '.json-comprehended.json')
+            .then(res => res.json()).then(json => {
+                const details = `
         Indeks czytelnosći: ${comprehendedJson.automated_readability_index} 
         Indeks SMOG: ${comprehendedJson.smog_index} 
         Indeks czytelności Flescha-Kinkaid: ${comprehendedJson.flesch_kincaid_grade} 
@@ -63,8 +65,9 @@ function App() {
         Dale-Chall: ${comprehendedJson.dale_chall} 
         Coleman-Liau: ${comprehendedJson.coleman_liau} 
         `
-
-        setDetails(details)
+                setDetails(details);
+            }
+        );
     };
 
     const selectVideo = (filename: string | undefined) => {
