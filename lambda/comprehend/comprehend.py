@@ -1,11 +1,13 @@
 import os
 import boto3
+import os
 import json
+import textstat
+
 
 
 def lambda_handler(event, context):
     s3_client = boto3.client('s3')
-    comprehend_client = boto3.client('comprehend')
 
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = event['Records'][0]['s3']['object']['key']
@@ -22,35 +24,46 @@ def lambda_handler(event, context):
     # Extract the transcribed text
     transcribed_text = document['results']['transcripts'][0]['transcript']
 
-    # Use AWS Comprehend to detect entities in the transcribed text
+    # Use textstat to evaluate transcribed text
     try:
-        print(f"Comprehend job started: {key}")
+        print(f"Textstat magic started: {key}")
 
-        comprehend_response = comprehend_client.detect_entities(Text=transcribed_text, LanguageCode='en')
+        textstat.set_lang('pl')
 
-        print(f"Comprehend job finished: {key}")
+        result = {
+            "reading_time": textstat.reading_time(transcribed_text),
+            "text_standard": textstat.text_standard(transcribed_text),
+            "automated_readability_index": textstat.automated_readability_index(transcribed_text),
+            "smog_index": textstat.smog_index(transcribed_text),
+            "flesch_kincaid_grade": textstat.flesch_kincaid_grade(transcribed_text),
+            "flex_reading_ease": textstat.flesch_reading_ease(transcribed_text),
+            "gunning_fog": textstat.gunning_fog(transcribed_text),
+            "dale_chall": textstat.dale_chall_readability_score_v2(transcribed_text),
+            "coleman_liau": textstat.coleman_liau_index(transcribed_text)
+        }
+
+        print(f"Textstat magic finished: {key}")
     except Exception as e:
-        print(f"Error starting comprehend job: {str(e)}")
+        print(f"Error starting textstat magic: {str(e)}")
         return {
             'statusCode': 500,
-            'body': f"Error starting comprehend job: {str(e)}"
+            'body': f"Error starting textstat magic: {str(e)}"
         }
 
     # Write the entities detected in the transcribed text to a JSON file
     with open('/tmp/' + output_file_name, 'w') as outfile:
-        json.dump(comprehend_response, outfile)
+        json.dump(result, outfile)
 
     # Upload the JSON file to S3
     try:
         s3_client.upload_file('/tmp/' + output_file_name, output_bucket_name, output_file_name)
     except Exception as e:
-        print(f"Error writing to bucket comprehend response: {str(e)}")
+        print(f"Error writing to bucket textstat response: {str(e)}")
         return {
             'statusCode': 500,
-            'body': f"Error writing to bucket comprehend response: {str(e)}"
+            'body': f"Error writing to bucket textstat response: {str(e)}"
         }
 
     return {
-        'statusCode': 200,
-        'body': comprehend_response
+        'statusCode': 200
     }
