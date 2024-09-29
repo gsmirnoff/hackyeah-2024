@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from 'react';
+import React, {useState, ChangeEvent, useRef} from 'react';
 import {
     GetObjectCommand, ListBucketsCommand, ListBucketsCommandOutput,
     ListObjectsCommand,
@@ -7,28 +7,42 @@ import {
 } from "@aws-sdk/client-s3";
 import {fromCognitoIdentityPool} from "@aws-sdk/credential-providers";
 
-const FileUploader: React.FC = () => {
+
+interface FileUploaderProps {
+    s3Client: S3Client;
+    sourceBucket: string;
+}
+
+const FileUploader: React.FC<FileUploaderProps> = ({s3Client, sourceBucket}) => {
     const [file, setFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState<boolean>(false);
-    const listBuckets = new ListBucketsCommand();
-    const client = new S3Client({
-        region: "eu-central-1",
-        credentials: fromCognitoIdentityPool({
-            clientConfig: { region: "eu-central-1" },
-            identityPoolId: '{IDENTITY_POOL_ID}',
-        }),
-    });
-    const sourceBucket = `{SOURCE_BUCKET}`;
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-
-    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (files && files.length > 0) {
-            setFile(files[0]);
+    const handleButtonClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
         }
     };
 
-    const handleUpload = async () => {
+    const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setUploading(true);
+            try {
+                await handleUpload(file);
+                // Reset the file input
+                event.target.value = '';
+            } catch (error) {
+                console.error('Upload failed:', error);
+            } finally {
+                setUploading(false);
+            }
+        }
+    };
+
+
+
+    const handleUpload = async (file: File) => {
         if (!file) {
             alert('Please select a file to upload');
             return;
@@ -38,7 +52,7 @@ const FileUploader: React.FC = () => {
 
         try {
             // Upload the file to S3
-            const result = await client.send(new PutObjectCommand({Bucket: sourceBucket, Key: file.name, Body: file}));
+            const result = await s3Client.send(new PutObjectCommand({Bucket: sourceBucket, Key: file.name, Body: file}));
             console.log('File uploaded successfully', result);
             alert('File uploaded successfully!');
         } catch (error) {
@@ -51,9 +65,18 @@ const FileUploader: React.FC = () => {
 
     return (
         <div>
-            <input type="file" onChange={handleFileChange} />
-            <button onClick={handleUpload} disabled={uploading}>
-                {uploading ? 'Uploading...' : 'Upload'}
+            <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                style={{display: 'none'}}
+            />
+            <button
+                className='upload-btn'
+                onClick={handleButtonClick}
+                disabled={uploading}
+            >
+                {uploading ? 'Uploading...' : 'Upload Video'}
             </button>
         </div>
     );

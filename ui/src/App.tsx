@@ -14,46 +14,60 @@ import "./App.css";
 import FileUploader from "./FileUploader";
 import VideoPlayer from "./VideoPlayer";
 
+
+
 function App() {
-  const [objects, setObjects] = useState<
+  const [uploadedVideos, setUploadedVideos] = useState<
     Required<ListObjectsCommandOutput>["Contents"]
   >([]);
 
+  const [requestedUrl, setRequestedUrl] = useState<string>("");
+  const [requestedFileName, setRequestedFileName] = useState<string | undefined>("");
+  let sourceBucket: string = '{SOURCE_BUCKET}';
 
-  const [buckets, setBuckets] = useState<
-      Required<ListBucketsCommandOutput>["Buckets"]
-  >([]);
+  const client = new S3Client({
+    region: "eu-central-1",
+    credentials: fromCognitoIdentityPool({
+      clientConfig: { region: "eu-central-1" },
+      identityPoolId: '{IDENTITY_POOL_ID}',
+    }),
+  });
 
   useEffect(() => {
-    const client = new S3Client({
-      region: "eu-central-1",
-      credentials: fromCognitoIdentityPool({
-        clientConfig: { region: "eu-central-1" },
-        identityPoolId: '{IDENTITY_POOL_ID}',
-      }),
-    });
-
-
-    const listBuckects = new ListBucketsCommand();
-
-    const command = new ListObjectsCommand({ Bucket: "{SOURCE_BUCKET}" });
-
-    client.send(command).then(({ Contents }) => setObjects(Contents || []));
+    const listBucket = new ListObjectsCommand({Bucket: sourceBucket});
+    client.send(listBucket).then(({Contents}) => setUploadedVideos(Contents || []));
   }, []);
 
+  const selectVideo = (filename: string | undefined) => {
+    setRequestedFileName(filename);
+    setRequestedUrl(`https://${sourceBucket}.s3.eu-central-1.amazonaws.com/`+filename)
+  };
   return (
-    <div className="App">
-      <FileUploader/>
-      <VideoPlayer url={""}/>
-      {buckets.map((bucket) => (
-          <div>{bucket.Name}</div>
-      ))}
-      {objects.map((o) => (
-          <div key={o.ETag}>{o.Key}</div>
-      ))}
-    </div>
-  );
+      <div className="App">
+        <header>
+          <FileUploader s3Client={client} sourceBucket={sourceBucket} />
+        </header>
+        <div className="main-content">
+          <div className="video-list">
+            {uploadedVideos.map((video) => (
+                <div onClick={() => selectVideo(video.Key)} className="video-item">
+                  <img src="https://via.placeholder.com/100x56" alt="Video Thumbnail"/>
+                  <span>{video.Key}</span>
+                </div>
+            ))}
+          </div>
+          <div className="video-player">
+            {requestedUrl ? <VideoPlayer url={requestedUrl}/> : null}
+            <div className="video-summary">
+              {requestedFileName ? <h2>{requestedFileName}</h2> : null}
+              <p>This is a summary of the selected video. It provides a brief description of the video content and any
+                additional information that might be relevant to the viewer.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+);
 }
 
 export default App;
-// snippet-end:[javascript.v3.scenarios.web.ListObjects]

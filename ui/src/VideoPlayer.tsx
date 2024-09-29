@@ -32,7 +32,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url }) => {
     };
 
     return (
-        <div className="video-player">
+        <div className="video-container">
             <ReactPlayer
                 ref={playerRef}
                 url={url}
