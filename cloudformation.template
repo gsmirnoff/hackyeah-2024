@@ -5,6 +5,7 @@ Mappings:
     General:
       TranscribeFnFilename: "transcribe.zip"
       ComprehendFnFilename: "comprehend.zip"
+      MyvoiceanalysisFnFilename: "myvoiceanalysis.zip"
 
 Resources:
   Source:
@@ -12,6 +13,10 @@ Resources:
   Transcribed:
     Type: 'AWS::S3::Bucket'
   Comprehended:
+    Type: 'AWS::S3::Bucket'
+  SourceMyvoiceanalysisBucket:
+    Type: 'AWS::S3::Bucket'
+  ResultMyvoiceanalysisBucket:
     Type: 'AWS::S3::Bucket'
   TranscribeFn:
     Type: 'AWS::Lambda::Function'
@@ -48,6 +53,25 @@ Resources:
         Variables:
           OUTPUT_BUCKET_NAME:
             Ref: Comprehended
+      Tags:
+        - Key: project
+          Value: !Ref 'AWS::StackName'
+  MyvoiceanalysisFn:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        S3Bucket: 'lambdas-hackyeah'
+        S3Key: !FindInMap ["SourceCode", "General", "MyvoiceanalysisFnFilename"]
+      FunctionName: myvoiceanalysis-fn
+      Handler: myvoiceanalysis.lambda_handler
+      Role: !GetAtt 'MyvoiceanalysisIAMRole.Arn'
+      Runtime: python3.11
+      MemorySize: 128
+      Timeout: 60
+      Environment:
+        Variables:
+          OUTPUT_BUCKET_NAME:
+            Ref: ResultMyvoiceanalysisBucket
       Tags:
         - Key: project
           Value: !Ref 'AWS::StackName'
@@ -108,6 +132,33 @@ Resources:
               - Effect: Allow
                 Action:
                   - 'comprehend:*'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'logs:*'
+                Resource: '*'
+  MyvoiceanalysisIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                  - 's3:GetObject'
                 Resource: '*'
               - Effect: Allow
                 Action:

@@ -7,3 +7,6 @@ aws s3 cp build/transcribe.zip s3://${lambda_bucket}/transcribe.zip
 
 # upload comprehend.zip to S3 bucket
 aws s3 cp build/comprehend.zip s3://${lambda_bucket}/comprehend.zip
+
+# upload myvoiceanalysis.zip to S3 bucket
+aws s3 cp build/myvoiceanalysis.zip s3://${lambda_bucket}/myvoiceanalysis.zip
