@@ -57,7 +57,7 @@ function App() {
             ))}
           </div>
           <div className="video-player">
-            {requestedUrl ? <VideoPlayer url={requestedUrl}/> : null}
+            {requestedUrl && <VideoPlayer url={requestedUrl}/>}
             <div className="video-summary">
               {requestedFileName ? <h2>{requestedFileName}</h2> : null}
               <p>This is a summary of the selected video. It provides a brief description of the video content and any
